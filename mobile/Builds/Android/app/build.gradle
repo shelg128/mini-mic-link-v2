@@ -12,18 +12,10 @@ android {
             version "3.22.1"
         }
     }
-    signingConfigs {
-        juceSigning {
-            storeFile     file("${System.properties['user.home']}${File.separator}.android${File.separator}sonouploadnew.jks")
-            storePassword "${sonoupload_keystore_password}"
-            keyAlias      "${sonoupload_key}"
-            keyPassword   "${sonoupload_key_password}"
-            storeType     "jks"
-        }
-    }
-
     defaultConfig {
-        applicationId "com.sonosaurus.sonobus"
+        applicationId "app.minimic.link"
+        versionCode 1
+        versionName "0.1.0"
         minSdkVersion    24
         targetSdkVersion 33
         externalNativeBuild {
@@ -38,13 +30,11 @@ android {
              initWith debug
              debuggable    true
              jniDebuggable true
-             signingConfig signingConfigs.juceSigning
          }
          release {
              initWith release
              debuggable    false
              jniDebuggable false
-             signingConfig signingConfigs.juceSigning
          }
     }
 
@@ -107,8 +97,6 @@ android {
     dependencies {
         implementation 'androidx.appcompat:appcompat:1.0.2'
     }
-
-ndkVersion "22.0.7026061"
 
 }
 

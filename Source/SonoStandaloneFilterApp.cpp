@@ -735,6 +735,13 @@ public:
             mainWindow->pluginHolder->savePluginState();
             mainWindow->pluginHolder->saveAudioDeviceState();
 
+#if JUCE_ANDROID && MINIMIC_MINIMAL_UI
+            // MiniMic is a background microphone sender/receiver by design.  On Android
+            // the Activity is paused whenever the user opens a game or another app, so
+            // do not shut down the audio engine just because the UI is no longer in
+            // front. The foreground microphone service is the user-visible lifetime.
+            setAndroidForegroundServiceActive(true);
+#else
             if (auto * sonoproc = dynamic_cast<SonobusAudioProcessor*>(mainWindow->pluginHolder->processor.get())) {
                 if (sonoproc->getNumberRemotePeers() == 0 && !mainWindow->pluginHolder->isInterAppAudioConnected()) {
                     // shutdown audio engine
@@ -751,6 +758,7 @@ public:
 #endif
                 }
             }
+#endif
 
         }
 

@@ -9,10 +9,13 @@ import android.app.PendingIntent;
 import android.app.Notification;
 import android.app.Service;
 import android.content.Intent;
+import android.content.pm.ServiceInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.IBinder;
 import android.os.Binder;
+import android.os.PowerManager;
+import android.net.wifi.WifiManager;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
@@ -23,6 +26,8 @@ public class SonoBusService extends Service {
      private final static String TAG = "SonoBus";
     private final static String FOREGROUND_CHANNEL_ID = "foreground_audio_sonobus";
     private NotificationManager mNotificationManager;
+    private PowerManager.WakeLock mWakeLock;
+    private WifiManager.WifiLock mWifiLock;
     
     public static final int NOTIFICATION_ID_FOREGROUND_SERVICE = 8468343;
 
@@ -50,7 +55,46 @@ public class SonoBusService extends Service {
             doStartForeground();
         }
         else {
+            releaseForegroundLocks();
             stopForeground(true);
+        }
+    }
+
+    private void acquireForegroundLocks()
+    {
+        if (mWakeLock == null) {
+            PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+            if (powerManager != null) {
+                mWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MiniMicLink:MicSender");
+                mWakeLock.setReferenceCounted(false);
+            }
+        }
+
+        if (mWakeLock != null && !mWakeLock.isHeld()) {
+            mWakeLock.acquire();
+        }
+
+        if (mWifiLock == null) {
+            WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+            if (wifiManager != null) {
+                mWifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "MiniMicLink:Network");
+                mWifiLock.setReferenceCounted(false);
+            }
+        }
+
+        if (mWifiLock != null && !mWifiLock.isHeld()) {
+            mWifiLock.acquire();
+        }
+    }
+
+    private void releaseForegroundLocks()
+    {
+        if (mWifiLock != null && mWifiLock.isHeld()) {
+            mWifiLock.release();
+        }
+
+        if (mWakeLock != null && mWakeLock.isHeld()) {
+            mWakeLock.release();
         }
     }
     
@@ -112,7 +156,14 @@ public class SonoBusService extends Service {
             notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
         }
         
-        startForeground(1555, notificationBuilder.build());
+        Notification notification = notificationBuilder.build();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            startForeground(1555, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE);
+        } else {
+            startForeground(1555, notification);
+        }
+
+        acquireForegroundLocks();
         
     }
     
@@ -126,6 +177,7 @@ public class SonoBusService extends Service {
     @Override
     public void onDestroy() {
        if (BuildConfig.DEBUG) Log.d(TAG, "SonoBus service stopped");            
+       releaseForegroundLocks();
 
     }
     

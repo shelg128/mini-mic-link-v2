@@ -36,6 +36,9 @@
 
 // HACK
 #include "SonobusPluginEditor.h"
+#if MINIMIC_MINIMAL_UI
+#include "MiniMicEditor.h"
+#endif
 
 #include <limits>
 #include <algorithm>
@@ -855,15 +858,24 @@ public:
        #if JUCE_IOS || JUCE_ANDROID
         setTitleBarHeight (0);
        #else
+#if MINIMIC_MINIMAL_UI
+        setTitleBarButtonsRequired (DocumentWindow::minimiseButton | DocumentWindow::closeButton, false);
+        setUsingNativeTitleBar (true);
+#else
         setTitleBarButtonsRequired (DocumentWindow::minimiseButton | DocumentWindow::closeButton | DocumentWindow::maximiseButton, false);
 
         Component::addAndMakeVisible (optionsButton);
         optionsButton.addListener (this);
         optionsButton.setTriggeredOnMouseDown (true);
-        setUsingNativeTitleBar(true);
+        setUsingNativeTitleBar (true);
+#endif
         #endif
 
+#if MINIMIC_MINIMAL_UI
+        setResizable (false, false);
+#else
         setResizable (true, false);
+#endif
         
         pluginHolder.reset (new StandalonePluginHolder (settingsToUse, takeOwnershipOfSettings,
                                                         preferredDefaultDeviceName, preferredSetupOptions,
@@ -1032,7 +1044,9 @@ public:
         //if (getTitleBarHeight() <= 0) {
         //    optionsButton.setBounds (8, 6, 60, 34);            
         //} else {
+#if ! MINIMIC_MINIMAL_UI
             optionsButton.setBounds (8, 6, 60, getTitleBarHeight() - 8);
+#endif
        // }
     }
 
@@ -1071,6 +1085,13 @@ private:
                     sonoeditor->getRecentSetupFiles = [this]() { return &(owner.pluginHolder->getRecentSetupFiles()); };
                     sonoeditor->getLastRecentsFolder = [this]() { return &owner.pluginHolder->getLastRecentsFolder(); };
                 }
+#if MINIMIC_MINIMAL_UI
+                if (auto* miniEditor = dynamic_cast<MiniMicEditor*> (editor.get()))
+                {
+                    miniEditor->getAudioDeviceManager = [this]() { return &owner.getDeviceManager(); };
+                    miniEditor->audioDeviceManagerReady();
+                }
+#endif
                 
                 editor->addComponentListener (this);
                 componentMovedOrResized (*editor, false, true);

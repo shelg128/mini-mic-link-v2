@@ -5,6 +5,9 @@
 
 #include "SonobusPluginProcessor.h"
 #include "SonobusPluginEditor.h"
+#if MINIMIC_MINIMAL_UI
+#include "MiniMicEditor.h"
+#endif
 
 #include "RunCumulantor.h"
 
@@ -8414,7 +8417,11 @@ bool SonobusAudioProcessor::hasEditor() const
 
 AudioProcessorEditor* SonobusAudioProcessor::createEditor()
 {
+#if MINIMIC_MINIMAL_UI
+    return new MiniMicEditor (*this);
+#else
     return new SonobusAudioProcessorEditor (*this);
+#endif
 }
 
 AudioProcessorValueTreeState& SonobusAudioProcessor::getValueTreeState()

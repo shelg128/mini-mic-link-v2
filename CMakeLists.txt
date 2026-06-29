@@ -8,6 +8,11 @@
 
 cmake_minimum_required(VERSION 3.15)
 
+# JUCE 6 still contains nested CMake projects with policy versions older than
+# CMake 4 accepts by default. This keeps the upstream build working on current
+# CMake releases without requiring a command-line flag.
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Minimum policy compatibility for bundled dependencies")
+
 
 if (WIN32)
     #set (CMAKE_GENERATOR_TOOLSET ClangCL)
@@ -17,6 +22,9 @@ endif()
 
 # If we are compiling for Mac OS we want to target OS versions down to 10.9
 option(UniversalBinary "Build universal binary for mac" ON)
+option(MINIMIC_ENABLE_ASIO "Enable ASIO support (requires a separately installed ASIO SDK)" OFF)
+option(MINIMIC_BUILD_PLUGINS "Build VST/AU/LV2 plugin formats in addition to the standalone app" OFF)
+option(MINIMIC_MINIMAL_UI "Use the minimal sender/receiver interface" ON)
 
 if (APPLE)
     set (CMAKE_OSX_DEPLOYMENT_TARGET "10.10" CACHE INTERNAL "")
@@ -36,7 +44,7 @@ endif()
 # `project()` command. `project()` sets up some helpful variables that describe source/binary
 # directories, and the current project version. This is a standard CMake command.
 
-project(SonoBus VERSION 1.7.2)
+project(SonoBus VERSION 0.1.0)
 
 set(BUILDVERSION 80)
 
@@ -82,7 +90,11 @@ juce_add_modules(deps/ff_meters)
 
 
 
-set (FormatsToBuild VST3 Standalone)
+set (FormatsToBuild Standalone)
+
+if (MINIMIC_BUILD_PLUGINS)
+    list (APPEND FormatsToBuild VST3)
+endif()
 
 # On Mac, a AU version will be built too
 if (APPLE)
@@ -155,8 +167,8 @@ function(sono_add_custom_plugin_target target_name product_name formats is_instr
         NEEDS_MIDI_INPUT TRUE
         NEEDS_MIDI_OUTPUT TRUE
         EDITOR_WANTS_KEYBOARD_FOCUS TRUE
-        COMPANY_NAME "Sonosaurus"
-        BUNDLE_ID "com.Sonosaurus.SonoBus"
+        COMPANY_NAME "MiniMic Project"
+        BUNDLE_ID "app.minimic.link"
         MICROPHONE_PERMISSION_ENABLED TRUE
         
         ICON_BIG "images/sonobus_icon_mac_1024.png"
@@ -179,7 +191,7 @@ function(sono_add_custom_plugin_target target_name product_name formats is_instr
         PLUGIN_MANUFACTURER_CODE Sono
         PLUGIN_CODE ${plugincode}
         FORMATS ${formats}
-        DESCRIPTION "SonoBus - Network Audio"
+        DESCRIPTION "MiniMic Link - Remote microphone for cloud gaming"
         PRODUCT_NAME "${product_name}")
 
     juce_generate_juce_header("${target_name}")
@@ -271,6 +283,8 @@ function(sono_add_custom_plugin_target target_name product_name formats is_instr
         Source/MVerb.h
         Source/Metronome.cpp
         Source/Metronome.h
+        Source/MiniMicEditor.cpp
+        Source/MiniMicEditor.h
         Source/MonitorDelayView.h
         Source/OptionsView.cpp
         Source/OptionsView.h
@@ -445,7 +459,8 @@ function(sono_add_custom_plugin_target target_name product_name formats is_instr
         JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1
 	JUCE_USE_WINDOWS_MEDIA_FORMAT=1
         JUCE_LOAD_CURL_SYMBOLS_LAZILY=1
-        JUCE_ASIO=1
+        JUCE_ASIO=$<BOOL:${MINIMIC_ENABLE_ASIO}>
+        MINIMIC_MINIMAL_UI=$<BOOL:${MINIMIC_MINIMAL_UI}>
         JUCE_WASAPI=1
         JUCE_DIRECTSOUND=0
         JUCE_JACK=1
@@ -621,11 +636,13 @@ function(sono_add_custom_plugin_target target_name product_name formats is_instr
 endfunction()
 
 # most of the targets
-sono_add_custom_plugin_target(SonoBus SonoBus "${FormatsToBuild}" FALSE  "NBus")
+sono_add_custom_plugin_target(SonoBus "MiniMic Link" "${FormatsToBuild}" FALSE  "NBus")
 
 # Mobile targets
 #sono_add_custom_plugin_target(SonoBusMobile "AUv3 Standalone" FALSE "NBus")
 
 # add VSTi target
-sono_add_custom_plugin_target(SonoBusInst "SonoBusInstrument" "VST3" TRUE  "IBus")
+if (MINIMIC_BUILD_PLUGINS)
+    sono_add_custom_plugin_target(SonoBusInst "SonoBusInstrument" "VST3" TRUE  "IBus")
+endif()
 
