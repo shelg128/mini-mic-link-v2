@@ -48,6 +48,24 @@ Executable hasil build berada di:
 build\SonoBus_artefacts\Release\Standalone\MiniMic Link.exe
 ```
 
+### Firewall dan antivirus
+
+Installer Windows menambahkan rule **Windows Firewall** untuk `MiniMic Link.exe` jika opsi **Allow MiniMic Link through Windows Firewall** dibiarkan aktif. Rule ini dibuat berdasarkan program, bukan port, karena MiniMic/SonoBus memakai UDP lokal dinamis untuk P2P.
+
+Port yang perlu diketahui:
+
+- Signaling/server: `aoo.sonobus.net:10998`.
+- Audio P2P: UDP lokal dinamis yang dipilih sistem saat aplikasi berjalan.
+
+Jika memakai installer, biasanya tidak perlu menambahkan port manual di Windows Firewall. Jika memakai ZIP portable, tambahkan manual:
+
+```powershell
+New-NetFirewallRule -DisplayName "MiniMic Link" -Direction Inbound -Program "C:\Path\To\MiniMic Link.exe" -Action Allow
+New-NetFirewallRule -DisplayName "MiniMic Link" -Direction Outbound -Program "C:\Path\To\MiniMic Link.exe" -Action Allow
+```
+
+Untuk antivirus/SmartScreen: build prototipe ini belum code-signed, jadi Windows atau antivirus bisa memberi warning. Pastikan download dari GitHub Release resmi proyek ini, lalu pilih **More info → Run anyway** jika SmartScreen muncul. Untuk distribusi publik final, aplikasi sebaiknya ditandatangani dengan code-signing certificate agar warning berkurang.
+
 ### Receiver pada cloud PC
 
 1. Install VB-Audio Virtual Cable.
