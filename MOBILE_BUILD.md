@@ -5,12 +5,13 @@ Android dan iOS hanya berperan sebagai **Sender**. Receiver tetap Windows karena
 ## Status saat ini
 
 - Android debug APK sudah berhasil dibuild dan diverifikasi metadata/signature.
-- APK final untuk testing: `dist\MiniMic-Link-Android-0.1.0-debug.apk`
+- APK final untuk testing dipisah per ABI di folder `dist`.
 - Package Android: `app.minimic.link`
 - Label aplikasi: `MiniMic Link`
 - Minimum Android: API 24 / Android 7.0.
 - Target Android: API 33.
 - ABI yang dibuild: `arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64`.
+- APK split yang direkomendasikan untuk mayoritas HP Android modern adalah `arm64-v8a`.
 - Sudah diverifikasi pada perangkat Android fisik melalui wireless ADB.
 - Foreground microphone service aktif dengan `foregroundServiceType="microphone"`.
 - Tes background: Android sender tetap mengirim audio ketika Chrome berada di foreground selama lebih dari 20 detik.
@@ -50,8 +51,15 @@ Paket yang dipakai:
 Install manual ke perangkat Android, jika USB debugging aktif:
 
 ```powershell
-adb install -r .\dist\MiniMic-Link-Android-0.1.0-debug.apk
+adb install -r .\dist\MiniMic-Link-Android-arm64-v8a-0.1.0-debug.apk
 ```
+
+Panduan memilih APK:
+
+- `arm64-v8a`: mayoritas HP Android modern.
+- `armeabi-v7a`: HP Android 32-bit/lama.
+- `x86_64`: emulator Android Intel 64-bit.
+- `x86`: emulator Android Intel 32-bit.
 
 Jika Android meminta permission mikrofon, izinkan. Untuk sesi gaming panjang, disarankan menonaktifkan battery optimization khusus untuk MiniMic Link agar foreground service tidak dihentikan oleh vendor ROM.
 

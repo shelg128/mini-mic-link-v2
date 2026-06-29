@@ -31,9 +31,14 @@ Belum selesai pada tahap ini:
 ## Artefak siap pakai
 
 - Windows x64: `dist\MiniMic-Link-Windows-x64-0.1.0.zip`
-- Android debug APK: `dist\MiniMic-Link-Android-0.1.0-debug.apk`
+- Android debug APK dipisah per ABI agar ukuran download kecil:
+  - `MiniMic-Link-Android-arm64-v8a-0.1.0-debug.apk` untuk mayoritas HP Android modern.
+  - `MiniMic-Link-Android-armeabi-v7a-0.1.0-debug.apk` untuk HP Android 32-bit/lama.
+  - `MiniMic-Link-Android-x86_64-0.1.0-debug.apk` untuk emulator Android Intel 64-bit.
+  - `MiniMic-Link-Android-x86-0.1.0-debug.apk` untuk emulator Android Intel 32-bit.
 
 Build Android ini debug-signed, cocok untuk install manual dan pengujian. Untuk distribusi publik tetap perlu release signing.
+Jika ragu dan memakai HP Android biasa keluaran beberapa tahun terakhir, pilih `arm64-v8a`.
 
 ## Menjalankan aplikasi Windows
 
@@ -106,6 +111,7 @@ Ringkasnya:
 ```
 
 APK debug akan dibuat di `mobile\Builds\Android\app\build\outputs\apk` dan disalin manual/otomatis ke `dist` sesuai kebutuhan rilis internal.
+Script build menyalin APK split per ABI ke `dist`.
 
 ## Model routing
 

@@ -29,4 +29,34 @@ finally {
     Pop-Location
 }
 
-Write-Host "APK debug tersedia di $androidProject\app\build\outputs\apk"
+$root = Split-Path -Parent $PSScriptRoot
+$dist = Join-Path $root 'dist'
+New-Item -ItemType Directory -Path $dist -Force | Out-Null
+
+$version = '0.1.0'
+$abiMap = @{
+    'arm64-v8a' = 'arm64-v8a'
+    'armeabi-v7a' = 'armeabi-v7a'
+    'x86' = 'x86'
+    'x86_64' = 'x86_64'
+}
+
+$apkRoot = Join-Path $androidProject 'app\build\outputs\apk'
+$splitApks = Get-ChildItem -LiteralPath $apkRoot -Recurse -Filter '*.apk' |
+    Where-Object { $_.Name -match 'debug' -and $_.Name -notmatch 'universal' }
+
+foreach ($abi in $abiMap.Keys) {
+    $apk = $splitApks | Where-Object { $_.Name -match [regex]::Escape($abi) } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if (-not $apk) {
+        throw "APK ABI $abi tidak ditemukan di $apkRoot"
+    }
+
+    $target = Join-Path $dist "MiniMic-Link-Android-$abi-$version-debug.apk"
+    Copy-Item -LiteralPath $apk.FullName -Destination $target -Force
+}
+
+Write-Host "APK split debug tersedia di $dist"
+Get-ChildItem -LiteralPath $dist -Filter "MiniMic-Link-Android-*-$version-debug.apk" |
+    Sort-Object Name |
+    Select-Object Name, Length, LastWriteTime |
+    Format-Table -AutoSize
